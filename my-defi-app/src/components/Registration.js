@@ -1,29 +1,41 @@
 import React, { useState } from 'react';
-import { getContract } from './ethereum';
-import contractABI from './contractABI.json';
-import contractAddress from './contractAddress';
+import { ethers } from 'ethers';
+import { advancedDeFiPayPalContract, getSigner } from '../utils/ethers';
 
-const Registration = () => {
+const RegisterUser = () => {
     const [status, setStatus] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const register = async () => {
+    const handleRegister = async () => {
         try {
-            const contract = getContract(contractABI, contractAddress);
-            const transaction = await contract.register();
-            await transaction.wait();
-            setStatus('Registration successful');
+            setLoading(true);
+            setStatus('Initiating transaction... please wait');
+
+            const signer = await getSigner();
+            const contractWithSigner = advancedDeFiPayPalContract.connect(signer);
+
+            const tx = await contractWithSigner.register();
+            setStatus('Transaction sent. Waiting for confirmation...');
+
+            await tx.wait();
+            setStatus('Registration successful!');
         } catch (error) {
-            setStatus('Registration failed');
-            console.error(error);
+            console.error('Error during registration:', error);
+            setStatus('Registration failed: ' + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <div>
-            <button onClick={register}>Register</button>
-            <p>Status: {status}</p>
+            <h2>Register User</h2>
+            <button onClick={handleRegister} disabled={loading}>
+                {loading ? 'Registering...' : 'Register'}
+            </button>
+            {status && <p>{status}</p>}
         </div>
     );
 };
 
-export default Registration;
+export default RegisterUser;
