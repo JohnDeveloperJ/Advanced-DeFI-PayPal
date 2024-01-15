@@ -5,6 +5,7 @@ import Deposit from './components/Deposit';
 import Withdraw from './components/Withdraw';
 import Transfer from './components/Transfer';
 import Balance from './components/Balance';
+import ConnectWallet from './components/ConnectWallet';  // Import ConnectWallet
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <h1>Advanced DeFi PayPal</h1>
       </header>
       <main>
+        <ConnectWallet />  {/* Use ConnectWallet */}
         <RegisterUser />
         <Deposit />
         <Withdraw />
