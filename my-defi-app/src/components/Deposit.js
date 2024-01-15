@@ -1,29 +1,45 @@
 import React, { useState } from 'react';
-import { getContract } from './ethereum';
-import contractABI from './contractABI.json';
-import contractAddress from './contractAddress';
+import { ethers } from 'ethers';
+import { advancedDeFiPayPalContract, getSigner } from '../utils/ethers';
 
 const Deposit = () => {
     const [amount, setAmount] = useState('');
     const [status, setStatus] = useState('');
 
     const handleDeposit = async () => {
+        if (!amount) {
+            setStatus('Please enter an amount to deposit.');
+            return;
+        }
+
         try {
-            const contract = getContract(contractABI, contractAddress);
-            const transaction = await contract.deposit({ value: ethers.utils.parseEther(amount) });
-            await transaction.wait();
-            setStatus('Deposit successful');
+            setStatus('Initiating deposit...');
+            const signer = await getSigner();
+            const contractWithSigner = advancedDeFiPayPalContract.connect(signer);
+
+            const tx = await contractWithSigner.deposit({ value: ethers.utils.parseEther(amount) });
+            setStatus('Transaction sent. Waiting for confirmation...');
+
+            await tx.wait();
+            setStatus(`Deposit of ${amount} ETH successful!`);
+            setAmount('');  // Reset amount after successful deposit
         } catch (error) {
-            setStatus('Deposit failed');
-            console.error(error);
+            console.error('Error during deposit:', error);
+            setStatus('Deposit failed: ' + error.message);
         }
     };
 
     return (
         <div>
-            <input type="text" value={amount} onChange={(e) => setAmount(e.target.value)} />
+            <h2>Deposit ETH</h2>
+            <input 
+                type="text" 
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="Amount in ETH"
+            />
             <button onClick={handleDeposit}>Deposit</button>
-            <p>Status: {status}</p>
+            {status && <p>{status}</p>}
         </div>
     );
 };
